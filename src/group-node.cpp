@@ -88,7 +88,7 @@ namespace graphics {
     {
         std::list<graphics::NodePtr_t>::const_iterator it =
             std::find (list_of_objects_.begin(), list_of_objects_.end(), child_ptr);
-        return it == list_of_objects_.end();
+        return it != list_of_objects_.end();
     }
     
     void GroupNode::removeAllChildren()
