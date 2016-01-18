@@ -88,7 +88,7 @@ bool KeyboardManipulator::handleKeyDown( const GUIEventAdapter& ea, GUIActionAda
 
   //keycode_ = XKeysymToKeycode(display_,ea.getUnmodifiedKey());
 
-  int keySym = ea.getUnmodifiedKey();
+  int keySym = ea.getKey();
   if(keyLayout_ == LAYOUT_azerty){ // adapt to azerty keyboard
       switch(keySym){
         case  osgGA::GUIEventAdapter::KEY_Z :
@@ -229,7 +229,7 @@ bool KeyboardManipulator::handleKeyUp( const GUIEventAdapter& ea, GUIActionAdapt
  // keycode_ = XKeysymToKeycode(display_,ea.getUnmodifiedKey());
  // std::cout<<"keycode = "<<keycode_<<std::endl;
 
-  int keySym = ea.getUnmodifiedKey();
+  int keySym = ea.getKey();
   if(keyLayout_ == LAYOUT_azerty) { // adapt to azerty keyboard
       switch(keySym){
         case  osgGA::GUIEventAdapter::KEY_Z :
