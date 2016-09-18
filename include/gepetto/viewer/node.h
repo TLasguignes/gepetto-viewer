@@ -12,6 +12,7 @@
 #include <iostream>
 #include <gepetto/viewer/node-visitor.h>
 #include <gepetto/viewer/config-osg.h>
+#include <gepetto/viewer/node-manipulator.h>
 
 namespace graphics {
     
@@ -35,6 +36,8 @@ namespace graphics {
         osg::GroupRefPtr hl_switch_node_ptr_;
         std::size_t selected_highlight_;
         std::vector< ::osg::GroupRefPtr > highlight_nodes_;
+
+        osg::NodeRefPtr dragger_node_ptr_;
         
         /** Initialization function */
         void init ();
@@ -154,6 +157,10 @@ namespace graphics {
         void deleteLandmark();
 
         void setHighlightState (unsigned int state);
+
+        void addDragger (const nodeManipulation::DraggerType& type, bool fixedSizeInScreen);
+
+        void removeDragger ();
         
         /*Tools::ConfigurationPtr_t getConfiguration () const
         {

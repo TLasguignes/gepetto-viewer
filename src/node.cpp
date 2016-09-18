@@ -284,6 +284,27 @@ namespace graphics {
     landmark_geode_ptr_.release();
   }
 
+  void addDragger (const nodeManipulation::DraggerType& type, bool fixedSizeInScreen)
+  {
+    if (dragged_node_ptr_.get() != NULL) {
+      auto_transform_ptr_->removeChild(dragger_node_ptr_);
+    } else {
+      auto_transform_ptr_->removeChild(static_auto_transform_ptr_);
+    }
+    dragger_node_ptr_ = nodeManipulation::addDraggerToScene(
+        static_auto_transform_ptr_, type, fixedSizeInScreen);
+    auto_transform_ptr_->addChild(dragger_node_ptr_);
+  }
+
+  void removeDragger ();
+  {
+    if (dragged_node_ptr_.get() != NULL) {
+      auto_transform_ptr_->removeChild(dragged_node_ptr_);
+      auto_transform_ptr_->addChild(static_auto_transform_ptr_);
+      dragger_node_ptr_.release();
+    }
+  }
+
   ::osg::Group* Node::setupHighlightState (unsigned int state)
   {
     ::osg::MaterialRefPtr material_switch_ptr = new osg::Material;
