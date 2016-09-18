@@ -12,7 +12,7 @@
 #include <iostream>
 #include <gepetto/viewer/node-visitor.h>
 #include <gepetto/viewer/config-osg.h>
-#include <gepetto/viewer/node-manipulator.h>
+#include <gepetto/viewer/node-manipulation.h>
 
 namespace graphics {
     

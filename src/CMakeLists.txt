@@ -40,6 +40,7 @@ SET(${LIBRARY_NAME}_SOURCES
   roadmap-viewer.cpp
   node-rod.cpp
   node-visitor.cc
+  node-manipulation.cc
   transform-writer.cc
   blender-geom-writer.cc
   OSGManipulator/keyboard-manipulator.cpp
