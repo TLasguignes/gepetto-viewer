@@ -16,7 +16,7 @@
 *  THE SOFTWARE.
 */
 
-#include <gepetto-viewer/node-manipulator.h>
+#include <gepetto/viewer/node-manipulation.h>
 
 #include <osgManipulator/TabBoxDragger>
 #include <osgManipulator/TabBoxTrackballDragger>
@@ -40,7 +40,7 @@ namespace graphics {
     osgManipulator::Dragger* createDragger(const DraggerType& type)
     {
       osgManipulator::Dragger* dragger = 0;
-      switch (type) {
+      switch (type) {
         case TabPlaneDragger:
           dragger = newDragger<osgManipulator::TabPlaneDragger>();
           break;
@@ -146,7 +146,7 @@ namespace graphics {
       else
         root->addChild(dragger);
 
-      float scale = scene->getBound().radius() * 1.6;
+      float scale = scene->getBound().radius() * 1.6f;
       dragger->setMatrix(osg::Matrix::scale(scale, scale, scale) *
           osg::Matrix::translate(scene->getBound().center()));
 

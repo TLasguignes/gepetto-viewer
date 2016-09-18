@@ -64,10 +64,10 @@ namespace graphics {
       
       const float depth = (float)-0.1;
       osg::Vec3Array* vertices = new osg::Vec3Array;
-      vertices->push_back(osg::Vec3(0.,traits_ptr->height,depth));
-      vertices->push_back(osg::Vec3(0.,0.,depth));
-      vertices->push_back(osg::Vec3(traits_ptr->width,0.,depth));
-      vertices->push_back(osg::Vec3(traits_ptr->width,traits_ptr->height,depth));
+      vertices->push_back(osg::Vec3(0.f,(float)traits_ptr->height,depth));
+      vertices->push_back(osg::Vec3(0.f,0.f,depth));
+      vertices->push_back(osg::Vec3((float)traits_ptr->width,0.,depth));
+      vertices->push_back(osg::Vec3((float)traits_ptr->width,(float)traits_ptr->height,depth));
       bg_geom_->setVertexArray(vertices);
       
       osg::Vec3Array* normals = new osg::Vec3Array;
