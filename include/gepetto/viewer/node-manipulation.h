@@ -9,9 +9,7 @@
 #ifndef SCENEVIEWER_NODE_MANIPULATOR_HH
 #define SCENEVIEWER_NODE_MANIPULATOR_HH
 
-namespace osg {
-  class Node;
-}
+#include <osgManipulator/Dragger>
 
 namespace graphics {
   namespace nodeManipulation {
@@ -26,7 +24,26 @@ namespace graphics {
       TabBoxDragger
     };
 
-    osg::Node* addDraggerToScene(osg::Node* scene, const DraggerType& type, bool fixedSizeInScreen);
+    class NodeDragger {
+      public:
+        ::osg::ref_ptr<osgManipulator::Dragger> dragger_;
+        ::osg::ref_ptr<osg::Group> scene_;
+        ::osg::ref_ptr<osg::MatrixTransform> selection_;
+
+        NodeDragger(float scaling = 1.6f);
+
+        bool empty ();
+
+        void addDragger (const DraggerType& type, bool fixedSizeInScreen);
+
+        void setSceneAndTransform (::osg::Group* scene, ::osg::MatrixTransform* selection);
+
+        void removeDragger ();
+
+      private:
+        float scaling_;
+        ::osg::Node* rootChild_;
+    };
   } /* namespace nodeManipulation */
 } /* namespace graphics */
 

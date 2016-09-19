@@ -20,7 +20,6 @@
 
 #include <osgManipulator/TabBoxDragger>
 #include <osgManipulator/TabBoxTrackballDragger>
-#include <osgManipulator/TabPlaneDragger>
 #include <osgManipulator/TabPlaneTrackballDragger>
 #include <osgManipulator/TrackballDragger>
 #include <osgManipulator/Translate1DDragger>
@@ -29,10 +28,26 @@
 
 #include <osg/MatrixTransform>
 
+#include <iostream>
+
+// TODO This is dirty...
+// #include <node-manipulation/tab-plane-dragger.cc>
+#include <../src/node-manipulation/tab-plane-dragger.cc>
+
 namespace graphics {
   namespace nodeManipulation {
+    typedef TabPlaneDraggerTpl<0,1> TabPlaneDraggerXY;
+
     template <typename DraggerDerived> DraggerDerived* newDragger () {
       DraggerDerived* d = new DraggerDerived();
+      d->setupDefaultGeometry();
+      return d;
+    }
+    template <> TabPlaneDraggerXY* newDragger<TabPlaneDraggerXY> () {
+      TabPlaneDraggerXY* d = new TabPlaneDraggerXY();
+      // std::cout << d->getMatrix() << std::endl;
+      // d->setMatrix(osg::Matrix::rotate(osg::Vec3f(0.f,0.f,1.f), osg::Vec3f(0.f,1.f,0.f)));
+      // std::cout << d->getMatrix() << std::endl;
       d->setupDefaultGeometry();
       return d;
     }
@@ -42,7 +57,7 @@ namespace graphics {
       osgManipulator::Dragger* dragger = 0;
       switch (type) {
         case TabPlaneDragger:
-          dragger = newDragger<osgManipulator::TabPlaneDragger>();
+          dragger = newDragger<TabPlaneDraggerXY>();
           break;
         case TabPlaneTrackballDragger:
           dragger = newDragger<osgManipulator::TabPlaneTrackballDragger>();
@@ -125,45 +140,63 @@ namespace graphics {
         bool _active;
     };
 
-    osg::Node* addDraggerToScene(osg::Node* scene, const DraggerType& type, bool fixedSizeInScreen)
+    NodeDragger::NodeDragger(float scaling) :
+      scaling_ (scaling), rootChild_ (NULL)
+    {}
+
+    bool NodeDragger::empty()
     {
-      scene->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
+      return (rootChild_ == NULL || scene_.get()==NULL || selection_.get()==NULL);
+    }
 
-      osg::MatrixTransform* selection = new osg::MatrixTransform;
-      selection->addChild(scene);
+    void NodeDragger::addDragger(const DraggerType& type, bool fixedSizeInScreen)
+    {
+      removeDragger();
 
-      osgManipulator::Dragger* dragger = createDragger(type);
-
-      osg::Group* root = new osg::Group;
-      root->addChild(selection);
+      dragger_ = createDragger(type);
 
       if ( fixedSizeInScreen )
       {
         DraggerContainer* draggerContainer = new DraggerContainer;
-        draggerContainer->setDragger( dragger );
-        root->addChild(draggerContainer);
+        draggerContainer->setDragger( dragger_ );
+        rootChild_ = draggerContainer;
       }
       else
-        root->addChild(dragger);
+        rootChild_ = dragger_;
+      scene_->addChild(rootChild_);
 
-      float scale = scene->getBound().radius() * 1.6f;
-      dragger->setMatrix(osg::Matrix::scale(scale, scale, scale) *
-          osg::Matrix::translate(scene->getBound().center()));
+      float scale = scene_->getBound().radius() * scaling_;
+      dragger_->setMatrix(osg::Matrix::scale(scale, scale, scale) *
+                          osg::Matrix::translate(scene_->getBound().center()));
 
-      dragger->addTransformUpdating(selection);
+      dragger_->addTransformUpdating(selection_);
 
       // we want the dragger to handle it's own events automatically
-      dragger->setHandleEvents(true);
+      dragger_->setHandleEvents(true);
 
       // if we don't set an activation key or mod mask then any mouse click on
       // the dragger will activate it, however if do define either of ActivationModKeyMask or
       // and ActivationKeyEvent then you'll have to press either than mod key or the specified key to
       // be able to activate the dragger when you mouse click on it.  Please note the follow allows
       // activation if either the ctrl key or the 'a' key is pressed and held down.
-      dragger->setActivationModKeyMask(osgGA::GUIEventAdapter::MODKEY_CTRL);
+      dragger_->setActivationModKeyMask(osgGA::GUIEventAdapter::MODKEY_CTRL);
       //dragger->setActivationKeyEvent('a');
+    }
 
-      return root;
+    void NodeDragger::setSceneAndTransform(osg::Group* scene, osg::MatrixTransform* selection)
+    {
+      // scene->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
+      if (!empty()) removeDragger();
+      scene_ = scene;
+      selection_ = selection;
+    }
+
+    void NodeDragger::removeDragger ()
+    {
+      if (!empty()) {
+        scene_->removeChild(rootChild_);
+        rootChild_ = NULL;
+      }
     }
   } /* namespace nodeManipulation */
 } /* namespace graphics */
