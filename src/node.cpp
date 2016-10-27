@@ -69,6 +69,8 @@ namespace graphics {
     wireframe_modes_[WIREFRAME]->getOrCreateStateSet()->setAttributeAndModes(material_wireframe_ptr, ::osg::StateAttribute::ON | ::osg::StateAttribute::PROTECTED );
     geode_ptr_ = NULL;
     alpha_ = 0;
+
+    dragger_.setSceneAndTransform(switch_node_ptr_, static_auto_transform_ptr_);
   }
 
   Node::Node (const std::string& name) :
@@ -286,23 +288,12 @@ namespace graphics {
 
   void Node::addDragger (const nodeManipulation::DraggerType& type, bool fixedSizeInScreen)
   {
-    if (dragger_node_ptr_.get() != NULL) {
-      auto_transform_ptr_->removeChild(dragger_node_ptr_);
-    } else {
-      auto_transform_ptr_->removeChild(static_auto_transform_ptr_);
-    }
-    dragger_node_ptr_ = nodeManipulation::addDraggerToScene(
-        static_auto_transform_ptr_, type, fixedSizeInScreen);
-    auto_transform_ptr_->addChild(dragger_node_ptr_);
+    dragger_.addDragger(type, fixedSizeInScreen);
   }
 
   void Node::removeDragger ()
   {
-    if (dragger_node_ptr_.get() != NULL) {
-      auto_transform_ptr_->removeChild(dragger_node_ptr_);
-      auto_transform_ptr_->addChild(static_auto_transform_ptr_);
-      dragger_node_ptr_.release();
-    }
+    dragger_.removeDragger();
   }
 
   ::osg::Group* Node::setupHighlightState (unsigned int state)
@@ -440,6 +431,22 @@ namespace graphics {
     PL_t parents = switch_node_ptr_->getParents();
     for (PL_t::const_iterator _p = parents.begin(); _p != parents.end(); ++_p)
       (*_p)->removeChild(switch_node_ptr_);
+    // normal_node_ptr_->removeChild (auto_transform_ptr_);
+    // wireframe_node_ptr_->removeChild (auto_transform_ptr_);
+    // auto_transform_ptr_ = NULL;
+
+    // for (std::size_t i = 0; i < switch_node_ptr_->getNumChildren(); ++i)
+      // switch_node_ptr_->getChild(i)->removeChild(auto_transform_ptr_);
+    // switch_node_ptr_   ->removeChildren(0, switch_node_ptr_   ->getNumChildren());
+    // hl_switch_node_ptr_->removeChildren(0, hl_switch_node_ptr_->getNumChildren());
+
+    // for (std::size_t i = 0; i < wireframe_modes_.size(); ++i)
+      // wireframe_modes_.release
+    // switch_node_ptr_->removeChild (wireframe_node_ptr_);
+    // wireframe_node_ptr_ = NULL;
+
+    // switch_node_ptr_->removeChild (normal_node_ptr_);
+    // normal_node_ptr_ = NULL;
   }
   
   std::pair<osgVector3, osgQuat> Node::getGlobalTransform() const

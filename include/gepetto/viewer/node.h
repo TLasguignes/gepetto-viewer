@@ -37,7 +37,7 @@ namespace graphics {
         std::size_t selected_highlight_;
         std::vector< ::osg::GroupRefPtr > highlight_nodes_;
 
-        osg::NodeRefPtr dragger_node_ptr_;
+        nodeManipulation::NodeDragger dragger_;
         
         /** Initialization function */
         void init ();
