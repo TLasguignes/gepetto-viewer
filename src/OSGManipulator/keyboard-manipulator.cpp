@@ -34,14 +34,6 @@ using namespace osgGA;
 KeyboardManipulator::KeyboardManipulator( int flags )
    : inherited( flags )
 {
-  speed_=startSpeed_;
-  speedRoll_=0.;
-  speedX_=0.;
-  speedY_=0.;
-  speedZ_=0.;
-  ctrl_ = false;
-  shift_ = false;
-  rightClic_ = false;
   keyLayout_=LAYOUT_unknown;
   localUp_ = getUpVector( getCoordinateFrame( _eye ) );
   noRoll_=true;
@@ -54,14 +46,6 @@ KeyboardManipulator::KeyboardManipulator( int flags )
 KeyboardManipulator::KeyboardManipulator(osgViewer::GraphicsWindow *window, int flags)
   : inherited( flags ),gWindow_(window)/*,camera_(viewer->getCamera())*/
 {
-  speed_=startSpeed_;
-  speedRoll_=0.;
-  speedX_=0.;
-  speedY_=0.;
-  speedZ_=0.;
-  ctrl_ = false;
-  shift_ = false;
-  rightClic_ = false;
   keyLayout_=LAYOUT_unknown;
   localUp_ = getUpVector( getCoordinateFrame( _eye ) );
   noRoll_=true;
@@ -73,7 +57,6 @@ KeyboardManipulator::KeyboardManipulator(osgViewer::GraphicsWindow *window, int 
   initKeyboard();
 }
 
-
 /// Copy Constructor.
 KeyboardManipulator::KeyboardManipulator( const KeyboardManipulator& fpm, const CopyOp& copyOp )
    :inherited( fpm, copyOp )
@@ -81,233 +64,115 @@ KeyboardManipulator::KeyboardManipulator( const KeyboardManipulator& fpm, const 
   initKeyboard();
 }
 
-
 // pressing a key
 bool KeyboardManipulator::handleKeyDown( const GUIEventAdapter& ea, GUIActionAdapter& us )
 {
-
-  //keycode_ = XKeysymToKeycode(display_,ea.getUnmodifiedKey());
-
-  int keySym = ea.getUnmodifiedKey();
-  if(keySym == 0){ // issue with getUnmodifiedKey() and hpp-gui (always return 0 because not initialised in osgQT)
-    keySym = ea.getKey();
-    if(keySym < 96 )  // ctrl mask
-      keySym += 96;
+  int keySym = ea.getKey();
+  if (keyLayout_ == LAYOUT_azerty) { // adapt to azerty keyboard
+    switch(keySym){
+      case GUIEventAdapter::KEY_Z :
+        keySym = GUIEventAdapter::KEY_W;
+        break;
+      case GUIEventAdapter::KEY_A :
+        keySym = GUIEventAdapter::KEY_Q;
+        break;
+      case GUIEventAdapter::KEY_Q :
+        keySym = GUIEventAdapter::KEY_A;
+        break;
+    }
   }
-  if(keyLayout_ == LAYOUT_azerty){ // adapt to azerty keyboard
-      switch(keySym){
-        case  osgGA::GUIEventAdapter::KEY_Z :
-          keySym = osgGA::key_forward;
-        break;
-        case  osgGA::GUIEventAdapter::KEY_A :
-          keySym = osgGA::key_roll_left;
-        break;
-        case  osgGA::GUIEventAdapter::KEY_Q :
-          keySym = osgGA::key_left;
-        break;
-      }
-  }
+  int modkeyMask = ea.getModKeyMask();
+  bool shift = modkeyMask & osgGA::GUIEventAdapter::MODKEY_SHIFT;
+  bool ctrl  = modkeyMask & osgGA::GUIEventAdapter::MODKEY_CTRL;
+  bool alt   = modkeyMask & osgGA::GUIEventAdapter::MODKEY_ALT;
+  if (shift && ctrl) return false;
+
+  osg::Vec3d& speed ( (alt ? speedR_ : speedT_) );
+  const double ratio = (ctrl ? 10. : (shift ? 0.1 : 1.));
 
   switch(keySym)
   {
-    case osgGA::key_forward :
-    case osgGA::GUIEventAdapter::KEY_Up :
-      // move forward
-      if(speedX_ <= 0){
-        speedX_ =1.;
-        return true;
-        }
-      else
-         return false;
-    break;
-    case osgGA::key_backward :
-    case osgGA::GUIEventAdapter::KEY_Down :
-      // move backward
-      if(speedX_ >=0){
-        speedX_ =-1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_left :
     case osgGA::GUIEventAdapter::KEY_Left :
-      // move left
-      if(speedY_ >= 0){
-        speedY_ = -1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_right :
-    case osgGA::GUIEventAdapter::KEY_Right :
-      // move right
-      if(speedY_ <= 0){
-        speedY_ = 1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_up : //spacebar
-      // move up
-      if(speedZ_ <= 0){
-        speedZ_ = 1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_down :
-      // move down
-      if(speedZ_ >= 0 ){
-        speedZ_ = -1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_roll_left :
-      // roll rotation left
-      noRoll_=false;
-      if (speedRoll_ >=0){
-        speedRoll_ = -1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::key_roll_right :
-      // roll rotation right
-      noRoll_=false;
-      if(speedRoll_ <=0){
-        speedRoll_ = 1.;
-        return true;
-        }
-      else
-        return false;
-    break;
-    case osgGA::GUIEventAdapter::KEY_R:
-      flushMouseEventStack();
-      _thrown = false;
-      localUp_ = getUpVector( getCoordinateFrame( _eye ) );
-      home(ea,us);
+      // move (or turn camera) left
+      speed[0] = - ratio;
       return true;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Plus :
-    case 65451 :// '+'  numpad
-      speed_*=1.2;
-      return false;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Minus :
-    case 65453 : // '-'  numpad
-      speed_*=0.8;
-      return false;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Asterisk :
-    case 65450 : // '*'  numpad
-      speed_=startSpeed_; // reset speed
-      return false;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Control_L:
-    case osgGA::GUIEventAdapter::KEY_Control_R:
-        ctrl_ = true;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Shift_L:
-    case osgGA::GUIEventAdapter::KEY_Shift_R:
-        shift_ = true;
-    break;
+    case osgGA::GUIEventAdapter::KEY_Right :
+      // move (or turn camera) right
+      speed[0] =   ratio;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_Up :
+      // move (or turn camera) up
+      speed[1] =   ratio;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_Down :
+      // move (or turn camera) down
+      speed[1] = - ratio;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_Page_Up:
+      // move forward or turn camera
+      speed[2] = - ratio;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_Page_Down:
+      // move backward or turn camera
+      speed[2] =   ratio;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_R:
+        flushMouseEventStack();
+        _thrown = false;
+        localUp_ = getUpVector( getCoordinateFrame( _eye ) );
+        home(ea,us);
+        return true;
   }
-
 
   return false;
 }
-
 
 /// Releasing the key
 bool KeyboardManipulator::handleKeyUp( const GUIEventAdapter& ea, GUIActionAdapter& /*us*/ )
 {
-  //std::cout<<"key : "<<ea.getKey()<<" unmodified code : "<<ea.getUnmodifiedKey()<<" keyMask : "<<ea.getModKeyMask()<<std::endl;
-
-
- // keycode_ = XKeysymToKeycode(display_,ea.getUnmodifiedKey());
- // std::cout<<"keycode = "<<keycode_<<std::endl;
-
-  int keySym = ea.getUnmodifiedKey();
-  if(keySym == 0){ // issue with getUnmodifiedKey() and hpp-gui (always return 0 because not initialised in osgQT)
-    keySym = ea.getKey();
-    if(keySym < 96 )  // ctrl mask
-      keySym += 96;
+  int keySym = ea.getKey();
+  if (keyLayout_ == LAYOUT_azerty) { // adapt to azerty keyboard
+    switch(keySym){
+      case GUIEventAdapter::KEY_Z :
+        keySym = GUIEventAdapter::KEY_W;
+        break;
+      case GUIEventAdapter::KEY_A :
+        keySym = GUIEventAdapter::KEY_Q;
+        break;
+      case GUIEventAdapter::KEY_Q :
+        keySym = GUIEventAdapter::KEY_A;
+        break;
+    }
   }
 
+  int modkeyMask = ea.getModKeyMask();
+  bool shift = modkeyMask & osgGA::GUIEventAdapter::MODKEY_SHIFT;
+  bool ctrl  = modkeyMask & osgGA::GUIEventAdapter::MODKEY_CTRL;
+  bool alt   = modkeyMask & osgGA::GUIEventAdapter::MODKEY_ALT;
+  if (shift && ctrl) return false;
 
-  if(keyLayout_ == LAYOUT_azerty) { // adapt to azerty keyboard
-      switch(keySym){
-        case  osgGA::GUIEventAdapter::KEY_Z :
-          keySym = osgGA::key_forward;
-        break;
-        case  osgGA::GUIEventAdapter::KEY_A :
-          keySym = osgGA::key_roll_left;
-        break;
-        case  osgGA::GUIEventAdapter::KEY_Q :
-          keySym = osgGA::key_left;
-        break;
-      }
-  }
+  osg::Vec3d& speed ( (alt ? speedR_ : speedT_) );
 
-  switch(keySym){
-    case osgGA::key_forward :
-    case osgGA::key_backward :
+  switch(keySym)
+  {
+    case osgGA::GUIEventAdapter::KEY_Left :
+    case osgGA::GUIEventAdapter::KEY_Right :
+      // move left / right
+      speed[0] = 0;
+      return true;
     case osgGA::GUIEventAdapter::KEY_Up :
     case osgGA::GUIEventAdapter::KEY_Down :
-      speedX_ =0.;
-      return false;
-    break;
-    case osgGA::key_right :
-    case osgGA::key_left :
-    case osgGA::GUIEventAdapter::KEY_Right :
-    case osgGA::GUIEventAdapter::KEY_Left :
-      speedY_ = 0.;
-      return false;
-    break;
-    case osgGA::key_up : //spacebar
-    case osgGA::key_down :
-      speedZ_=0.;
-      return false;
-    break;
-    case osgGA::key_roll_left :
-    case osgGA::key_roll_right :
-      speedRoll_=0.;
-      return false;
-    break;
-    }
-  switch(ea.getKey()){
-    case '2' :
-      //getUsage();
-    break;
-    case osgGA::GUIEventAdapter::KEY_Control_L:
-    case osgGA::GUIEventAdapter::KEY_Control_R:
-        ctrl_ = false;
-    break;
-    case osgGA::GUIEventAdapter::KEY_Shift_L:
-    case osgGA::GUIEventAdapter::KEY_Shift_R:
-        shift_ = false;
-    break;
-   }
+      // move up / down
+      speed[1] = 0;
+      return true;
+    case osgGA::GUIEventAdapter::KEY_Page_Up:
+    case osgGA::GUIEventAdapter::KEY_Page_Down:
+      // move forward / backward
+      speed[2] = 0;
+      return true;
+  }
+
   return false;
-}
-
-
-void KeyboardManipulator::rotateRoll(const double roll/*,const osg::Vec3d& localUp */)
-{
-    //bool verticalAxisFixed = (localUp != Vec3d( 0.,0.,0. ));
-
-    // fix current rotation
-
-    // rotations
-    rotateRoll_.makeRotate( roll,_rotation * Vec3d( 0.,0.,-1. ) );
-    _rotation = _rotation * rotateRoll_;
 }
 
 // free rotation (remove localUp constraint from parent class)
@@ -327,16 +192,17 @@ bool KeyboardManipulator::handleFrame( const GUIEventAdapter& ea, GUIActionAdapt
   _delta_frame_time = current_frame_time - _last_frame_time;
   _last_frame_time = current_frame_time;
 
-  double dist = speed_ * _delta_frame_time;  // distance according to refresh rate
-
-  if(ctrl_)
-    dist = dist / 10. ;
-
-  rotateRoll_.makeRotate(dist*speedRoll_, _rotation * Vec3d( 0.,0.,-1. ) );  // apply rotation
+  const osg::Vec3d yaw   (0.0, 0.0, 1.0);
+  const osg::Vec3d roll  (1.0, 0.0, 0.0);
+  const osg::Vec3d pitch (0.0, 1.0, 0.0);
+  const double angle_rate = 0.1 * _delta_frame_time; // Scale rotation velocity
+  rotateRoll_.makeRotate(
+      angle_rate * speedR_[1], roll,
+      angle_rate * speedR_[0], pitch,
+      angle_rate * speedR_[2], yaw);
   _rotation = _rotation * rotateRoll_;
 
-  _eye += _rotation * Vec3d (dist*speedY_, dist * speedZ_, - dist * speedX_);
-
+  _eye += _rotation * speedT_ * _delta_frame_time;
 
   return inherited::handleFrame(ea,us);
 }
@@ -345,7 +211,7 @@ bool KeyboardManipulator::handleFrame( const GUIEventAdapter& ea, GUIActionAdapt
 bool KeyboardManipulator::handleMousePush( const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us ){
   gWindow_->useCursor(false);
   if( ! noRoll_)
-    localUp_ = _rotation * Vec3d( 0.,1.,0. );
+    localUp_ = _rotation * Vec3d( 0.,0.,1. );
 
   return inherited::handleMousePush(ea,us);
 }
@@ -484,31 +350,35 @@ bool KeyboardManipulator::initKeyboard(){
 }
 
 
-void KeyboardManipulator::getUsage(osg::ApplicationUsage &usage) const{
-  if(keyLayout_==LAYOUT_azerty){
-    usage.addKeyboardMouseBinding(" -1. Keyboard : ","Move with keyboard arrow or zqsd and the mouse for rotation");
-    usage.addKeyboardMouseBinding(" -2. Arrow keys  ","Planar translations");
-    usage.addKeyboardMouseBinding(" -3. z/s ", "Forward / backward translation");
-    usage.addKeyboardMouseBinding(" -4. q/d ", "Left / right translation");
-    usage.addKeyboardMouseBinding(" -5. Space/v ", "Up / down translation");
-    usage.addKeyboardMouseBinding(" -6. a/e ", "Roll rotation");
+void KeyboardManipulator::getUsage(osg::ApplicationUsage &usage) const
+{
+  typedef osgGA::GUIEventAdapter EA;
+  const char* prefix = "Keyboard: ";
 
-    }
-  else {
-    usage.addKeyboardMouseBinding(" -1. Keyboard manipulator : ","move with keyboard arrow or wasd and the mouse for rotation");
-    usage.addKeyboardMouseBinding(" -2. arrow keys  ","Planar translations");
-    usage.addKeyboardMouseBinding(" -3. w/s ", "Forward / backward translation");
-    usage.addKeyboardMouseBinding(" -4. a/d ", "Left / right translation");
-    usage.addKeyboardMouseBinding(" -5. Space/v ", "Up / down translation");
-    usage.addKeyboardMouseBinding(" -6. q/e ", "Roll rotation");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Up  , "Translate / Rotate up");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Down, "Translate / Rotate down");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Left , "Translate / Rotate left");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Right, "Translate / Rotate right");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Page_Up  , "Translate / Rotate forward");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_Page_Down, "Translate / Rotate backward");
+  if(keyLayout_==LAYOUT_azerty) {
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_Z, "Translate / Rotate up");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_S, "Translate / Rotate down");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_Q, "Translate / Rotate left");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_D, "Translate / Rotate right");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_A, "Translate / Rotate forward");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_E, "Translate / Rotate backward");
+  } else {
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_W, "Translate / Rotate up");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_S, "Translate / Rotate down");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_A, "Translate / Rotate left");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_D, "Translate / Rotate right");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_Q, "Translate / Rotate forward");
+    usage.addKeyboardMouseBinding(prefix, EA::KEY_E, "Translate / Rotate backward");
   }
-  usage.addKeyboardMouseBinding(" -7. Mouse ", "Left button : Yaw / pitch rotation");
-  usage.addKeyboardMouseBinding(" -8. ","-------- ");
-  usage.addKeyboardMouseBinding(" -9. r","Reset the viewing position to home");
-  usage.addKeyboardMouseBinding("-10. hold Ctrl","Slow movement mode");
-  usage.addKeyboardMouseBinding("-11. + / - ","Change movement speed");
-  usage.addKeyboardMouseBinding("-12. *","Reset movement speed");
-  usage.addKeyboardMouseBinding("-13. ---------","----------------");
+  usage.addKeyboardMouseBinding("Keyboard: Shift", "Hold for low speed");
+  usage.addKeyboardMouseBinding("Keyboard: Ctrl" , "Hold for high speed");
+  usage.addKeyboardMouseBinding(prefix, EA::KEY_R, "Reset the viewing position to home");
 
 
 
