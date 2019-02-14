@@ -21,7 +21,9 @@ namespace graphics {
   class IsDirtyVisitor : public NodeVisitor
   {
     public:
-      IsDirtyVisitor () : NodeVisitor (false), isDirty_ (false) {}
+      // TODO Invisible nodes must be considered, otherwise they do not
+      // disappear when they become invisible.
+      IsDirtyVisitor () : NodeVisitor (true), isDirty_ (false) {}
 
       ~IsDirtyVisitor () {}
 
