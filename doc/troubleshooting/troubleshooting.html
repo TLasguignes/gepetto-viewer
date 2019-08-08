@@ -1,0 +1,91 @@
+<html>
+  <head>
+  <link rel="stylesheet" href="qrc:/css/troubleshooting.css"/>
+  <head/>
+  <body>
+<h1 id="troubleshooting">Troubleshooting</h1>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><a href="#menus-or-tooltips-are-unreadable">Menus or tooltips are unreadable</a></li>
+<li><a href="#display-of-large-meshes-is-very-slow">Display of large meshes is very slow</a></li>
+<li><a href="#corbatransient-when-launching-a-server"><code>CORBA::TRANSIENT</code> when launching a server</a></li>
+<li><a href="#collada-files-are-not-displayed">Collada files are not displayed</a></li>
+<li><a href="#i-still-have-an-issue">I still have an issue</a></li>
+</ul>
+<hr />
+<h2 id="menus-or-tooltips-are-unreadable">Menus or tooltips are unreadable</h2>
+<p>You can create a Qt style sheet <code>stylesheet.txt</code>:</p>
+<div class="codehilite"><pre><span></span><span class="nt">QMenu</span> <span class="p">{</span>
+ <span class="k">background</span><span class="p">:</span> <span class="kc">white</span><span class="p">;</span>
+ <span class="k">color</span><span class="p">:</span> <span class="kc">black</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">QMenu</span><span class="p">:</span><span class="nd">selected</span> <span class="p">{</span>
+ <span class="k">background</span><span class="p">:</span> <span class="kc">blue</span><span class="p">;</span>
+ <span class="k">color</span><span class="p">:</span> <span class="kc">white</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">QToolTip</span> <span class="p">{</span>
+ <span class="k">background</span><span class="p">:</span> <span class="kc">yellow</span><span class="p">;</span>
+ <span class="k">border</span><span class="p">:</span> <span class="mi">1</span><span class="kt">px</span> <span class="kc">solid</span> <span class="kc">black</span><span class="p">;</span>
+ <span class="k">color</span><span class="p">:</span> <span class="kc">black</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>and run <code>gepetto-gui -stylesheet stylesheet.txt</code></p>
+<p><a href="#troubleshooting">top</a></p>
+<hr />
+<h2 id="display-of-large-meshes-is-very-slow">Display of large meshes is very slow</h2>
+<p>A solution to help reducing the rendering time is to use Level Of Details (LOD).
+In short, you can use the following command to generate a LOD for mesh named <code>mesh.ext</code>.</p>
+<div class="codehilite"><pre><span></span>gvtools --input mesh.ext --simplify <span class="m">1</span>,0,1 --simplify <span class="m">0</span>.5,1,3 --simplify <span class="m">0</span>.2,3,100 --output mesh.ext.osgb
+</pre></div>
+
+
+<p>This will create a LOD with three levels:
+- from 0 to 1 meters, use original mesh,
+- from 1 to 3 meters, use simplified mesh with ratio 0.5 (half less vertices),
+- from 3 to 100 meters, use simplified mesh with ratio 0.2,
+- farther than 100 meters, don't show anything.</p>
+<p><code>gvtools</code> is part of <em>gepetto-viewer</em> package.  See <code>gvtools --help</code> for more details.</p>
+<p><a href="#troubleshooting">top</a></p>
+<hr />
+<h2 id="corbatransient-when-launching-a-server"><code>CORBA::TRANSIENT</code> when launching a server</h2>
+<p>It very often happens that the OmniNames server failed to start properly at boot.</p>
+<p>To check if the server is running, run:</p>
+<div class="codehilite"><pre><span></span>ps -C omniNames -o pid,args
+</pre></div>
+
+
+<p>If the process is not running, delete omniNames related log and backup files in <code>/var/lib/omniorb</code>. They may have different names on your computer, but most likely, something like:</p>
+<div class="codehilite"><pre><span></span>sudo rm /var/lib/omniORB/omninames-<span class="sb">`</span>hostname<span class="sb">`</span>.log
+sudo rm /var/lib/omniORB/omninames-<span class="sb">`</span>hostname<span class="sb">`</span>.bak
+</pre></div>
+
+
+<p>then restart the server:</p>
+<div class="codehilite"><pre><span></span>sudo service omniorb4-nameserver restart
+</pre></div>
+
+
+<p><a href="#troubleshooting">top</a></p>
+<hr />
+<h2 id="collada-files-are-not-displayed">Collada files are not displayed</h2>
+<p>The nodes are created and exists in the body tree widget but nothing appears in the scene viewer. This is due to a conflict between OSG and Qt. A work around is to convert the DAE to osg using the following command:</p>
+<div class="codehilite"><pre><span></span><span class="c1"># &lt;file&gt; is the name of the file including the DAE extension.</span>
+<span class="c1"># The output filename will end with .dae.osg.</span>
+osgconv &lt;file&gt; &lt;file&gt;.osg
+</pre></div>
+
+
+<p>If you have many files, you may run that at the root of the meshes subdirectories:</p>
+<div class="codehilite"><pre><span></span><span class="n">find</span> <span class="err">$</span><span class="p">{</span><span class="n">root_of_meshes_directory</span><span class="p">}</span> <span class="o">-</span><span class="n">iname</span> <span class="s2">&quot;*.dae&quot;</span> <span class="o">-</span><span class="nb">type</span> <span class="n">f</span> <span class="o">-</span><span class="k">exec</span> <span class="n">osgconv</span> <span class="p">{}</span> <span class="p">{}</span><span class="o">.</span><span class="n">osg</span> \<span class="p">;</span>
+</pre></div>
+
+
+<p><a href="#troubleshooting">top</a></p>
+<hr />
+<h2 id="i-still-have-an-issue">I still have an issue</h2>
+<p>Have a look at the issues already posted on <a href="https://github.com/gepetto/gepetto-viewer">gepetto-viewer</a> and <a href="https://github.com/gepetto/gepetto-viewer-corba">gepetto-viewer-corba</a>.</p>
+<p><a href="#troubleshooting">top</a></p>
+  <body/>
+<html/>

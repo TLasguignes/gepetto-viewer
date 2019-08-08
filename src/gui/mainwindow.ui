@@ -78,6 +78,7 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionTroubleshooting"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -315,6 +316,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About...</string>
+   </property>
+  </action>
+  <action name="actionTroubleshooting">
+   <property name="text">
+    <string>&amp;Troubleshooting...</string>
    </property>
   </action>
   <action name="actionReconnect">

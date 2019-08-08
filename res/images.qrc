@@ -15,4 +15,10 @@
     <qresource prefix="/img">
         <file>gepetto.png</file>
     </qresource>
+    <qresource prefix="/html">
+        <file alias="troubleshooting.html">../doc/troubleshooting/troubleshooting.html</file>
+    </qresource>
+    <qresource prefix="/css">
+        <file alias="troubleshooting.css">../doc/troubleshooting/troubleshooting.css</file>
+    </qresource>
 </RCC>

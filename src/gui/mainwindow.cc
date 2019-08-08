@@ -21,6 +21,7 @@
 
 #include <QtGlobal>
 #include <QScrollBar>
+#include <QWebView>
 #include <QMessageBox>
 #if (QT_VERSION >= QT_VERSION_CHECK(5,0,0))
 # include <QtConcurrent>
@@ -378,6 +379,20 @@ namespace gepetto {
 #undef _to_str
 #undef _osg_version_str
 
+    void MainWindow::troubleshooting()
+    {
+      static QDialog* dialog(NULL);
+      static QWebView* browser (NULL);
+      if (browser == NULL) {
+        browser = new QWebView (this);
+        dialog = new QDialog (this);
+        dialog->setLayout (new QVBoxLayout);
+        dialog->layout ()->addWidget (browser);
+        browser->load (QUrl ("qrc:/html/troubleshooting.html"));
+      }
+      dialog->exec();
+    }
+
     void MainWindow::activateCollision(bool activate)
     {
       if (activate) {
@@ -517,6 +532,7 @@ namespace gepetto {
       connect (collisionValidationActivated_, SIGNAL(clicked(bool)), SLOT(activateCollision(bool)));
       connect (collisionIndicator_, SIGNAL (mouseClickEvent()), SLOT(requestConfigurationValidation()));
       connect (ui_->actionAbout, SIGNAL (triggered ()), SLOT(about()));
+      connect (ui_->actionTroubleshooting, SIGNAL (triggered ()), SLOT(troubleshooting()));
       connect (ui_->actionReconnect, SIGNAL (triggered ()), SLOT(resetConnection()));
       connect (ui_->actionClose_connections, SIGNAL (triggered ()), SLOT(closeConnection()));
 

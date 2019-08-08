@@ -229,6 +229,7 @@ signals:
         void resetConnection ();
         void closeConnection ();
         void about ();
+        void troubleshooting ();
 
       private:
         void splitTabifiedDockWidget(Qt::Orientation orientation);
