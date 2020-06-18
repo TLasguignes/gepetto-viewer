@@ -22,6 +22,10 @@ project(gepetto-viewer-octomap LANGUAGES CXX)
 find_package(gepetto-viewer REQUIRED)
 find_package(octomap REQUIRED)
 
+FIND_PACKAGE(Qt4 REQUIRED QtCore QtGui QtOpenGL QtNetwork QtXml)
+SET(PROJECT_QT_LIBS Qt4::QtCore Qt4::QtGui Qt4::QtOpenGL Qt4::QtNetwork Qt4::QtXml)
+INCLUDE(${QT_USE_FILE})
+
 IF(GEPETTO_VIEWER_QTVERSION VERSION_LESS 5)
   set(USE_QT4 "QT4")
 else()
