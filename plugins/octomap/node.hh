@@ -42,6 +42,12 @@ namespace gepetto {
         /// \param size the length of each side of the cube.
         void addCube (float size, osg::Vec3 origin);
 
+        /// \param the main octree to explore
+        /// \param the node to explore childrens
+        /// \param the node depth level
+        /// \param the depth level to show
+        void recursivedisplay(octomap::OcTree* ptree, octomap::OcTreeNode* node, int level, int show_level);
+
         std::vector< ::osg::ShapeDrawableRefPtr > boxes;
         ::osg::GeodeRefPtr geode;
 
